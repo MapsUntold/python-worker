@@ -13,6 +13,7 @@ WORKDIR /data
 COPY builder/requirements.txt /data/requirements.txt
 RUN python3.11 -m pip install --upgrade pip && \
     python3.11 -m pip install --upgrade -r requirements.txt --no-cache-dir && \
+    python3.11 -m pip install bertopic && \
     rm requirements.txt
 
 # Add src files (Worker Template)
