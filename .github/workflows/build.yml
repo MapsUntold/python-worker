@@ -1,4 +1,4 @@
-name: CD | Build-Test-Release
+name: Build
 
 on:
   push:
@@ -6,12 +6,10 @@ on:
       - "main"
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      image_tag:
-        description: "Docker Image Tag"
-        required: false
-        default: "dev"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   docker-build:
