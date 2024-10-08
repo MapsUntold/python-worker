@@ -2,34 +2,34 @@ import runpod
 import json
 import subprocess
 import os.path
+from minio import Minio
+
+tmp_path = "/data/data.json"
+
+def get_from_s3(url, access_key, secret_key, bucket, filename):
+
 
 def handler(job):
     job_input = job['input']
 
-    # Make data folder writeable
-    cmd = '''
-        mkdir /data
-        chmod 777 /data
-    '''
-    subprocess.check_output(cmd, shell=True)
+    # Job inputs
+    task_id = job_input["task_id"]
+    minio_url = job_input.get("minio_url", "")
+    minio_bucket = job_input.get("minio_bucket", ""),
+    minio_access_key = job_input.get("minio_access_key", "")
+    minio_secret_key = job_input.get("minio_secret_key", ""),
 
-    # Add SSH key
-    cmd = '''
-        mkdir -p ~/.ssh
-        echo "{ssh_key}" >> ~/.ssh/authorized_keys
-        chmod 700 -R ~/.ssh
-        generate_ssh_keys
-        service ssh start 
-    '''.format(ssh_key=job_input["ssh_key"])
-    subprocess.check_output(cmd, shell=True)
+    # Create minio client
+    client = Minio(
+        minio_url,
+        access_key=minio_access_key,
+        secret_key=minio_secret_key,
+    )
 
-    # Wait for input file
-    input_path = job_input.get('data', '')
-    while not os.path.exists(input_path):
-        time.sleep(1)
-        
-    # Parse data
-    with open(input_path) as json_file:
+    # Download and parse input from minio
+    input_path = job_input.get('input_path', "")
+    client.fget_object(minio_bucket, input_path, tmp_path)
+    with open(data_path) as json_file:
         data = json.load(json_file)
 
     # Compile handler code
@@ -39,11 +39,13 @@ def handler(job):
 
     try:
         # Start runner
-        model = Runner.start(
-            {
-                "output_path": "/data/"
-            },
-            data
+        model_path = Runner.start(data)
+
+        # Upload model to minio
+        client.fput_object(
+            "mu-algo-v1",
+            task_name + "/" + str(i) + ".json",
+            "/home/jovyan/mu_algo_v1/data/xx/" + str(i) + ".json"
         )
 
         return json.dumps({
