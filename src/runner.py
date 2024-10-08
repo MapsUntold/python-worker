@@ -1,6 +1,7 @@
 import runpod
 import json
 import subprocess
+import os.path
 
 def handler(job):
     job_input = job['input']
@@ -22,21 +23,25 @@ def handler(job):
     '''.format(ssh_key=job_input["ssh_key"])
     subprocess.check_output(cmd, shell=True)
 
+    # Wait for input file
+    input_path = job_input.get('data', '')
+    while not os.path.exists(input_path):
+        time.sleep(1)
+        
+    # Parse data
+    with open(input_path) as json_file:
+        data = json.load(json_file)
+
     # Compile handler code
     handler = job_input.get('handler', '')
     code = compile(handler, 'handler', 'exec')
     exec(code)
 
-    # Parse data
-    path = job_input.get('data', '')
-    with open(path) as json_file:
-        data = json.load(json_file)
-
     try:
         # Start runner
         model = Runner.start(
             {
-                "path": "/data/"
+                "output_path": "/data/"
             },
             data
         )
